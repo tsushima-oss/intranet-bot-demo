@@ -1,0 +1,1192 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社内BOT — Microsoft Teams</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', 'Yu Gothic UI', 'Yu Gothic', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: #fff; color: #242424; }
+
+/* ════════ TOP BAR ════════ */
+.topbar {
+  height: 40px;
+  background: #0c1822;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 8px;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+.topbar-nav { display: flex; gap: 2px; }
+.topbar-navbtn {
+  width: 28px; height: 28px;
+  background: none; border: none;
+  color: #aaaab8; font-size: 14px;
+  border-radius: 4px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.topbar-navbtn:hover { background: rgba(255,255,255,0.1); color: white; }
+.topbar-search {
+  flex: 1; max-width: 640px; margin: 0 auto;
+  background: #2d2e42;
+  border: 1px solid #3d3e52;
+  border-radius: 4px;
+  height: 28px;
+  display: flex; align-items: center;
+  padding: 0 10px; gap: 6px;
+  color: #aaaab8; font-size: 12px;
+}
+.topbar-search input {
+  background: none; border: none; outline: none;
+  color: #aaaab8; font-size: 12px; flex: 1;
+  font-family: inherit;
+}
+.topbar-search input::placeholder { color: #7a7b8e; }
+.topbar-right { display: flex; gap: 4px; margin-left: auto; }
+.topbar-rightbtn {
+  width: 28px; height: 28px;
+  background: none; border: none;
+  border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #aaaab8; font-size: 13px;
+}
+.topbar-rightbtn:hover { background: rgba(255,255,255,0.1); }
+.topbar-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6264a7, #0078d4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: white; cursor: pointer;
+  position: relative;
+}
+.topbar-avatar::after {
+  content: '';
+  position: absolute; bottom: 0; right: 0;
+  width: 8px; height: 8px;
+  background: #6bb700; border-radius: 50%;
+  border: 1.5px solid #0c1822;
+}
+.win-controls { display: flex; gap: 0; margin-left: 8px; }
+.win-btn {
+  width: 36px; height: 30px;
+  background: none; border: none;
+  color: #aaaab8; font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.win-btn:hover { background: rgba(255,255,255,0.1); }
+.win-btn.close:hover { background: #c42b1c; color: white; }
+
+/* ════════ BODY ROW ════════ */
+.body-row { display: flex; flex: 1; overflow: hidden; }
+
+/* ════════ LEFT RAIL ════════ */
+.rail {
+  width: 52px;
+  background: #0c1822;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.rail-item {
+  width: 44px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #aaaab8;
+  gap: 2px;
+  transition: all 0.1s;
+  position: relative;
+  margin-bottom: 2px;
+}
+.rail-item:hover { background: rgba(255,255,255,0.08); color: #e0e0e8; }
+.rail-item.active { color: white; }
+.rail-item.active::before {
+  content: '';
+  position: absolute; left: -4px; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: #7b83eb;
+  border-radius: 0 2px 2px 0;
+}
+.rail-icon { font-size: 18px; line-height: 1; }
+.rail-label { font-size: 9px; line-height: 1.2; text-align: center; }
+.rail-badge {
+  position: absolute; top: 4px; right: 4px;
+  background: #c4314b; color: white;
+  border-radius: 8px; font-size: 9px; font-weight: 700;
+  min-width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 2px;
+}
+.rail-spacer { flex: 1; }
+.rail-divider { width: 24px; height: 1px; background: rgba(255,255,255,0.12); margin: 4px 0; }
+
+/* ════════ TEAMS PANEL ════════ */
+.teams-panel {
+  width: 252px;
+  background: #fff;
+  border-right: 1px solid #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.tp-header {
+  display: flex; align-items: center;
+  padding: 12px 12px 8px;
+  gap: 8px;
+}
+.tp-title { font-size: 16px; font-weight: 600; color: #242424; flex: 1; }
+.tp-icon-btn {
+  width: 28px; height: 28px;
+  border: none; background: none;
+  border-radius: 4px; cursor: pointer;
+  font-size: 14px; color: #616161;
+  display: flex; align-items: center; justify-content: center;
+}
+.tp-icon-btn:hover { background: #f0f0f0; }
+
+.tp-scroll { flex: 1; overflow-y: auto; }
+
+.tp-section-label {
+  font-size: 11px; font-weight: 600; color: #616161;
+  padding: 8px 12px 4px;
+  letter-spacing: 0.02em;
+}
+.team-item {
+  display: flex; align-items: center;
+  padding: 4px 8px 4px 12px;
+  cursor: pointer; gap: 8px;
+  border-radius: 0;
+}
+.team-item:hover { background: #f5f5f5; }
+.team-item:hover .team-more { display: flex; }
+.team-icon-sq {
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.team-name { font-size: 13px; font-weight: 500; color: #242424; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-more {
+  width: 24px; height: 24px;
+  border: none; background: none;
+  border-radius: 4px; cursor: pointer;
+  font-size: 14px; color: #616161;
+  display: none; align-items: center; justify-content: center;
+}
+.team-more:hover { background: #e8e8e8; }
+
+.channel-item {
+  display: flex; align-items: center;
+  padding: 4px 8px 4px 44px;
+  cursor: pointer; gap: 4px;
+  font-size: 13px; color: #424242;
+  position: relative;
+}
+.channel-item:hover { background: #f0f0f0; }
+.channel-item:hover .ch-more { display: flex; }
+.channel-item.active {
+  background: #e9e9f6;
+  color: #1a1a2e;
+  font-weight: 600;
+}
+.channel-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: #6264a7;
+  border-radius: 0 2px 2px 0;
+}
+.ch-text { flex: 1; }
+.ch-more {
+  width: 22px; height: 22px;
+  border: none; background: none;
+  border-radius: 3px; cursor: pointer;
+  font-size: 12px; color: #616161;
+  display: none; align-items: center; justify-content: center;
+}
+.ch-badge {
+  background: #c4314b; color: white;
+  border-radius: 8px; font-size: 9px; font-weight: 700;
+  min-width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+}
+
+.tp-bottom {
+  border-top: 1px solid #e8e8e8;
+  padding: 8px 0;
+}
+.tp-bottom-item {
+  display: flex; align-items: center;
+  padding: 6px 12px; gap: 8px;
+  cursor: pointer; font-size: 13px; color: #424242;
+}
+.tp-bottom-item:hover { background: #f5f5f5; }
+.tp-bottom-icon { font-size: 16px; color: #6264a7; }
+
+/* ════════ MAIN CHANNEL ════════ */
+.channel-area {
+  flex: 1; display: flex; flex-direction: column;
+  background: #fff; overflow: hidden;
+}
+
+/* Tab bar */
+.tab-bar {
+  display: flex; align-items: center;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 0 16px;
+  gap: 0;
+  flex-shrink: 0;
+  height: 44px;
+}
+.tab-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 12px; height: 44px;
+  font-size: 14px; color: #616161;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+.tab-item:hover { color: #242424; background: #f5f5f5; }
+.tab-item.active { color: #6264a7; font-weight: 600; border-bottom-color: #6264a7; }
+.tab-item .tab-icon { font-size: 13px; }
+.tab-new-badge {
+  background: #c4314b; color: white;
+  border-radius: 3px; font-size: 9px; font-weight: 700;
+  padding: 1px 4px;
+}
+.tab-add {
+  width: 32px; height: 32px;
+  border: none; background: none; border-radius: 4px;
+  cursor: pointer; font-size: 18px; color: #616161;
+  display: flex; align-items: center; justify-content: center;
+}
+.tab-add:hover { background: #f0f0f0; }
+.tab-right { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.tab-right-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 4px;
+  border: 1px solid #d1d1d1; background: none;
+  font-size: 13px; color: #424242; cursor: pointer;
+  font-family: inherit;
+}
+.tab-right-btn:hover { background: #f5f5f5; }
+.tab-right-icon { font-size: 14px; color: #616161; cursor: pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:4px; }
+.tab-right-icon:hover { background: #f0f0f0; }
+
+/* Messages */
+.messages-area { flex: 1; overflow-y: auto; padding: 8px 0; }
+
+.date-sep {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px 8px;
+}
+.date-sep::before, .date-sep::after { content:''; flex:1; height:1px; background:#e8e8e8; }
+.date-sep span { font-size: 12px; color: #616161; white-space: nowrap; }
+
+/* System message */
+.sys-msg {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 20px 4px 16px;
+  font-size: 13px; color: #616161;
+}
+.sys-msg .sys-icon { font-size: 16px; color: #999; width: 36px; text-align: center; flex-shrink: 0; }
+.sys-msg .sys-link { color: #6264a7; cursor: pointer; text-decoration: none; }
+.sys-msg .sys-link:hover { text-decoration: underline; }
+
+/* Regular message */
+.msg-row {
+  display: flex; gap: 10px;
+  padding: 4px 16px 4px 16px;
+  transition: background 0.1s;
+  position: relative;
+}
+.msg-row:hover { background: #f5f5f5; }
+.msg-row:hover .hover-actions { opacity: 1; pointer-events: all; }
+
+.msg-avt-col { width: 36px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.msg-avt {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: white;
+  flex-shrink: 0; position: relative;
+}
+.msg-avt.online::after {
+  content: ''; position: absolute; bottom: 0; right: 0;
+  width: 10px; height: 10px;
+  background: #6bb700; border-radius: 50%;
+  border: 2px solid white;
+}
+.avt-bot  { background: linear-gradient(135deg, #6264a7, #464775); }
+.avt-user { background: linear-gradient(135deg, #0078d4, #005a9e); }
+.avt-w    { background: #107c10; }
+
+.msg-body { flex: 1; min-width: 0; }
+.msg-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+.msg-name { font-size: 14px; font-weight: 700; color: #242424; }
+.msg-name.is-bot { color: #6264a7; }
+.msg-bot-tag {
+  font-size: 10px; background: #ebebf5; color: #6264a7;
+  border: 1px solid #d0d0e8;
+  padding: 1px 5px; border-radius: 3px; font-weight: 600;
+}
+.msg-time { font-size: 12px; color: #999; }
+
+.msg-text { font-size: 14px; line-height: 1.6; color: #242424; word-break: break-word; }
+.msg-text strong { font-weight: 700; }
+.msg-text code { background: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 3px; padding: 1px 5px; font-family: 'Cascadia Code','Consolas',monospace; font-size: 12px; }
+.msg-text a { color: #0078d4; text-decoration: none; }
+.msg-text a:hover { text-decoration: underline; }
+
+/* Source badge */
+.src-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; padding: 3px 8px; border-radius: 3px;
+  margin-top: 6px; font-weight: 500;
+}
+.src-found   { background: #f0f8f0; color: #107c10; border: 1px solid #c8e6c9; }
+.src-old     { background: #fff8f0; color: #c7910a; border: 1px solid #ffe0b2; }
+.src-missing { background: #fdf3f4; color: #c4314b; border: 1px solid #f9c0c2; }
+
+/* Reply & feedback row */
+.msg-actions-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 6px; flex-wrap: wrap;
+}
+.reply-btn, .feedback-btn-inline {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: 1px solid #e0e0e0; border-radius: 3px;
+  padding: 3px 10px; font-size: 12px; color: #616161;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.1s;
+}
+.reply-btn:hover { background: #f5f5f5; border-color: #c0c0c0; }
+.feedback-btn-inline { color: #c7910a; border-color: #ffe0b2; background: #fff8f0; }
+.feedback-btn-inline:hover { background: #fff0e0; border-color: #ffbb66; }
+.feedback-btn-missing { color: #c4314b; border-color: #f9c0c2; background: #fdf3f4; }
+.feedback-btn-missing:hover { background: #fce8ea; border-color: #e8a0a8; }
+
+/* Right avatar on message */
+.msg-right-avt {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: white;
+  flex-shrink: 0; margin-top: 4px;
+}
+
+/* Hover action bar */
+.hover-actions {
+  position: absolute; top: -14px; right: 20px;
+  background: white; border: 1px solid #e0e0e0;
+  border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex; align-items: center; padding: 2px 4px; gap: 1px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.1s; z-index: 5;
+}
+.hov-btn {
+  width: 28px; height: 28px; border: none; background: none;
+  border-radius: 4px; cursor: pointer; font-size: 14px; color: #616161;
+  display: flex; align-items: center; justify-content: center;
+}
+.hov-btn:hover { background: #f0f0f0; color: #242424; }
+
+/* Typing */
+.typing-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 16px 8px 16px;
+}
+.typing-avt { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg,#6264a7,#464775); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; }
+.typing-dots { display: flex; gap: 4px; align-items: center; }
+.tdot { width: 7px; height: 7px; background: #999; border-radius: 50%; animation: tdot 1.2s infinite; }
+.tdot:nth-child(2) { animation-delay: 0.2s; }
+.tdot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes tdot { 0%,80%,100%{transform:scale(0.7);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+.typing-label { font-size: 12px; color: #616161; font-style: italic; }
+
+/* ════════ INPUT ════════ */
+.input-area {
+  border-top: 1px solid #e8e8e8;
+  padding: 8px 16px 10px;
+  flex-shrink: 0;
+}
+.quick-chips {
+  display: flex; gap: 5px; flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.qchip {
+  background: #f0f0f0; border: 1px solid #d8d8d8; border-radius: 12px;
+  padding: 3px 10px; font-size: 12px; cursor: pointer; color: #424242;
+  transition: all 0.1s; font-family: inherit;
+}
+.qchip:hover { background: #e8e8f4; border-color: #6264a7; color: #6264a7; }
+
+.input-box {
+  border: 1px solid #d1d1d1; border-radius: 6px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: white;
+}
+.input-box:focus-within { border-color: #6264a7; box-shadow: 0 0 0 2px rgba(98,100,167,0.15); }
+
+.input-text-row {
+  display: flex; align-items: center;
+  padding: 10px 12px 6px;
+}
+.input-text-row textarea {
+  flex: 1; border: none; outline: none;
+  font-size: 14px; resize: none; font-family: inherit;
+  line-height: 1.5; max-height: 100px; color: #242424;
+  background: transparent;
+}
+.input-text-row textarea::placeholder { color: #999; font-size: 13px; }
+
+.input-toolbar {
+  display: flex; align-items: center;
+  padding: 4px 8px 6px;
+  gap: 1px;
+}
+.itool {
+  width: 30px; height: 28px; border: none; background: none;
+  border-radius: 3px; cursor: pointer; font-size: 14px; color: #616161;
+  display: flex; align-items: center; justify-content: center; font-family: inherit;
+}
+.itool:hover { background: #f0f0f0; color: #242424; }
+.itool-b { font-weight: 900; font-size: 13px; }
+.itool-i { font-style: italic; font-size: 13px; }
+.itool-u { text-decoration: underline; font-size: 13px; }
+.itool-code { font-size: 11px; font-family: monospace; font-weight: 700; }
+.itool-sep { width: 1px; height: 16px; background: #e0e0e0; margin: 0 3px; flex-shrink: 0; }
+.send-btn {
+  margin-left: auto;
+  width: 32px; height: 28px;
+  background: #6264a7; color: white; border: none; border-radius: 4px;
+  cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.1s;
+}
+.send-btn:hover { background: #464775; }
+.send-btn:disabled { background: #d1d1d1; cursor: default; }
+
+/* ════════ MODAL ════════ */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: 200;
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: 6px; width: 520px; max-width: 95vw;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.22);
+  overflow: hidden; animation: mIn 0.18s ease;
+}
+@keyframes mIn { from{opacity:0;transform:translateY(-10px)scale(0.97)} to{opacity:1;transform:none} }
+.modal-hd {
+  background: #6264a7; color: white;
+  padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-hd h3 { font-size: 15px; font-weight: 700; }
+.modal-xbtn { background:none; border:none; color:white; font-size:17px; cursor:pointer; width:28px; height:28px; border-radius:4px; display:flex; align-items:center; justify-content:center; opacity:0.8; }
+.modal-xbtn:hover { opacity:1; background:rgba(255,255,255,0.15); }
+.modal-bd { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.mlabel { font-size: 13px; font-weight: 600; color: #242424; display: block; margin-bottom: 4px; }
+.mquestion { background: #f5f5f5; border-radius: 4px; padding: 9px 12px; font-size: 13px; color: #616161; border-left: 3px solid #6264a7; }
+.modal-bd select, .modal-bd textarea {
+  width: 100%; border: 1px solid #d1d1d1; border-radius: 4px;
+  padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; color: #242424;
+}
+.modal-bd select:focus, .modal-bd textarea:focus { border-color: #6264a7; }
+.modal-bd textarea { resize: vertical; min-height: 90px; }
+.modal-ft { padding: 12px 18px; border-top: 1px solid #e8e8e8; display: flex; gap: 8px; justify-content: flex-end; }
+.btn-sec { background: white; border: 1px solid #d1d1d1; border-radius: 4px; padding: 7px 16px; font-size: 13px; cursor: pointer; font-family: inherit; }
+.btn-sec:hover { background: #f5f5f5; }
+.btn-pri { background: #6264a7; border: none; border-radius: 4px; padding: 7px 16px; font-size: 13px; color: white; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-pri:hover { background: #464775; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: #107c10; color: white; padding: 10px 16px; border-radius: 4px;
+  font-size: 13px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  display: flex; align-items: center; gap: 8px; z-index: 300;
+  opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: none; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ════════ UNANSWERED / FILES TAB AREAS ════════ */
+.alt-area { display:none; flex:1; flex-direction:column; overflow-y:auto; padding:16px; background:#fafafa; }
+.alt-area.visible { display:flex; }
+
+.sp-table-wrap { background:white; border-radius:6px; border:1px solid #e0e0e0; overflow:hidden; flex-shrink:0; }
+.sp-table-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; border-bottom:1px solid #e8e8e8; background:#f8f8f8;
+}
+.sp-table-title { font-size:14px; font-weight:600; color:#242424; }
+.sp-export-btn {
+  display:flex; align-items:center; gap:4px;
+  padding:5px 12px; background:#107c10; color:white;
+  border:none; border-radius:4px; font-size:12px; cursor:pointer;
+  font-family:inherit; font-weight:500;
+}
+.sp-export-btn:hover { background:#0a5e0a; }
+
+table.sp-table { width:100%; border-collapse:collapse; }
+table.sp-table th {
+  background:#f0f0f0; padding:8px 10px; text-align:left;
+  font-weight:600; color:#424242; border-bottom:2px solid #d0d0d0;
+  font-size:11px; white-space:nowrap;
+}
+table.sp-table td { padding:8px 10px; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+table.sp-table tr:hover td { background:#f8f8f8; }
+table.sp-table tr:last-child td { border-bottom:none; }
+.status-badge { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.status-open { background:#fde7e9; color:#c4314b; }
+.status-wip  { background:#fff4ce; color:#8a6914; }
+.status-done { background:#e5f4e0; color:#107c10; }
+.sp-empty { padding:40px; text-align:center; color:#999; font-size:14px; }
+.sp-auto-note {
+  display:flex; align-items:center; gap:6px; margin-top:10px;
+  font-size:11px; color:#107c10; padding:7px 10px;
+  background:#f0faf0; border-radius:4px; border:1px solid #c8e6c9;
+}
+
+/* KB detail expand */
+.kb-detail-body { display:none; margin-top:6px; padding-top:6px; border-top:1px solid #eee; font-size:11px; color:#424242; line-height:1.6; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<!-- ════ TOP BAR ════ -->
+<div class="topbar">
+  <div class="topbar-nav">
+    <button class="topbar-navbtn">&#8592;</button>
+    <button class="topbar-navbtn">&#8594;</button>
+  </div>
+  <div class="topbar-search">
+    <span>🔍</span>
+    <input type="text" placeholder="人、キーワードの検索、またはコマンドの入力">
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-avatar">RT</div>
+    <button class="topbar-rightbtn">?</button>
+  </div>
+  <div class="win-controls">
+    <button class="win-btn">－</button>
+    <button class="win-btn">□</button>
+    <button class="win-btn close">✕</button>
+  </div>
+</div>
+
+<!-- ════ BODY ════ -->
+<div class="body-row">
+
+  <!-- Rail -->
+  <div class="rail"><img src="data:image/png;base64,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" alt="Teams Navigation" style="width:52px;height:100%;object-fit:cover;object-position:top;display:block;"></div>
+
+
+  <!-- Teams Panel -->
+  <div class="teams-panel">
+    <div class="tp-header">
+      <span class="tp-title">チーム</span>
+      <button class="tp-icon-btn" title="フィルター">&#9638;</button>
+      <button class="tp-icon-btn" title="チームを作成または参加">&#43;</button>
+    </div>
+
+    <div class="tp-scroll">
+      <div class="tp-section-label">あなたのチーム</div>
+
+      <!-- Team: 全社 -->
+      <div class="team-item">
+        <div class="team-icon-sq" style="background:#6264a7">全</div>
+        <span class="team-name">全社</span>
+        <button class="team-more">…</button>
+      </div>
+      <div class="channel-item">
+        <span class="ch-text">一般</span>
+      </div>
+
+      <!-- Team: businesstool -->
+      <div class="team-item">
+        <div class="team-icon-sq" style="background:#0078d4">B</div>
+        <span class="team-name">businesstool</span>
+        <button class="team-more">…</button>
+      </div>
+      <div class="channel-item">
+        <span class="ch-text">一般</span>
+      </div>
+      <div class="channel-item">
+        <span class="ch-text">エクセル</span>
+      </div>
+
+      <!-- Team: マーケティング -->
+      <div class="team-item">
+        <div class="team-icon-sq" style="background:#7719aa">マ</div>
+        <span class="team-name">マーケティング</span>
+        <button class="team-more">…</button>
+      </div>
+      <div class="channel-item active">
+        <span class="ch-text">一般</span>
+        <button class="ch-more">…</button>
+      </div>
+      <div class="channel-item">
+        <span class="ch-text">販売会議</span>
+      </div>
+
+      <!-- Team: 社内BOT -->
+      <div class="team-item">
+        <div class="team-icon-sq" style="background:#107c10">B</div>
+        <span class="team-name">社内BOTチーム</span>
+        <button class="team-more">…</button>
+      </div>
+      <div class="channel-item">
+        <span class="ch-text">一般</span>
+      </div>
+      <div class="channel-item" style="font-weight:600;color:#1a1a2e;background:#e9e9f6;position:relative" onclick="">
+        <span class="ch-text" style="color:#1a1a2e">社内BOTチャンネル</span>
+        <span class="ch-badge">5</span>
+      </div>
+
+      <div class="tp-section-label" style="margin-top:8px;">非表示のチーム</div>
+    </div>
+
+    <div class="tp-bottom">
+      <div class="tp-bottom-item">
+        <span class="tp-bottom-icon">👤</span>
+        ユーザーを招待
+      </div>
+      <div class="tp-bottom-item">
+        <span class="tp-bottom-icon">⊞</span>
+        チームに参加、またはチームを作成
+      </div>
+    </div>
+  </div>
+
+  <!-- Channel Area -->
+  <div class="channel-area">
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item" style="padding:0 6px">
+        <span style="font-size:18px;color:#7719aa">🟣</span>
+      </div>
+      <div class="tab-item active" data-tab="posts" onclick="switchTab('posts')">投稿</div>
+      <div class="tab-item" data-tab="files" onclick="switchTab('files')">ファイル</div>
+      <div class="tab-item" data-tab="wiki" onclick="switchTab('wiki')">Wiki</div>
+      <div class="tab-item" data-tab="meeting" onclick="switchTab('meeting')">
+        会議のメモ
+        <span class="tab-new-badge">NEW</span>
+      </div>
+      <div class="tab-item" data-tab="unanswered" onclick="switchTab('unanswered')" style="color:#c4314b;gap:5px">
+        📋 未回答リスト
+        <span id="unans-badge" class="tab-new-badge" style="display:none">0</span>
+      </div>
+      <button class="tab-add">＋</button>
+      <div class="tab-right">
+        <button class="tab-right-btn">👁 返信</button>
+        <span class="tab-right-icon">⋯</span>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages-area" id="messages">
+      <div class="date-sep"><span>昨日</span></div>
+
+      <!-- System messages -->
+      <div class="sys-msg">
+        <span class="sys-icon">📅</span>
+        <span>writingtool さんがチャネル <a class="sys-link">販売会議</a> を作成しました。<a class="sys-link">チャネルを非表示にする</a></span>
+      </div>
+
+      <div class="date-sep"><span>今日</span></div>
+    </div>
+
+    <!-- Unanswered List Tab -->
+    <div id="unanswered-area" class="alt-area">
+      <div class="sp-table-wrap">
+        <div class="sp-table-header">
+          <span class="sp-table-title">📋 未回答質問リスト</span>
+          <button class="sp-export-btn" onclick="exportCSV()">⬇ CSVダウンロード</button>
+        </div>
+        <table class="sp-table">
+          <thead>
+            <tr>
+              <th style="width:36px">No.</th>
+              <th>質問内容</th>
+              <th style="width:130px">受信日時</th>
+              <th style="width:80px">カテゴリ</th>
+              <th style="width:90px">ステータス</th>
+              <th style="width:90px">対応者</th>
+            </tr>
+          </thead>
+          <tbody id="unanswered-tbody"></tbody>
+        </table>
+        <div id="unanswered-empty" class="sp-empty">未回答の質問はありません 🎉<br><span style="font-size:12px">質問にナレッジが見つからないと自動でここに記録されます</span></div>
+      </div>
+      <div class="sp-auto-note">⚡ 未回答が発生すると SharePoint リスト & スプレッドシートに自動記録されます（デモ）</div>
+    </div>
+
+    <!-- Files Tab -->
+    <div id="files-area" class="alt-area">
+      <div class="sp-table-wrap">
+        <div class="sp-table-header">
+          <span class="sp-table-title">📂 社内資料ライブラリ（SharePoint Documents）</span>
+          <span style="font-size:11px;color:#616161">7件</span>
+        </div>
+        <table class="sp-table">
+          <thead>
+            <tr>
+              <th>ファイル名</th>
+              <th style="width:110px">更新日</th>
+              <th style="width:80px">更新者</th>
+              <th style="width:60px">サイズ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="cursor:pointer" onclick="showToast('就業規則_2026年版.docx を開きました（デモ）')">
+              <td style="padding:9px 12px"><span style="color:#1072eb;margin-right:6px">📄</span>就業規則_2026年版.docx</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">2026-04-01</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">人事部</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">245KB</td>
+            </tr>
+            <tr style="cursor:pointer" onclick="showToast('経費精算書テンプレート.xlsx を開きました（デモ）')">
+              <td style="padding:9px 12px"><span style="color:#107c10;margin-right:6px">📊</span>経費精算書テンプレート.xlsx</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">2026-03-15</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">総務部</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">38KB</td>
+            </tr>
+            <tr style="cursor:pointer" onclick="showToast('出張申請書.xlsx を開きました（デモ）')">
+              <td style="padding:9px 12px"><span style="color:#107c10;margin-right:6px">📊</span>出張申請書.xlsx</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">2026-02-20</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">総務部</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">29KB</td>
+            </tr>
+            <tr style="cursor:pointer" onclick="showToast('セキュリティポリシー2026.pdf を開きました（デモ）')">
+              <td style="padding:9px 12px"><span style="color:#c4314b;margin-right:6px">📕</span>セキュリティポリシー2026.pdf</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">2026-06-01</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">IT部門</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">1.2MB</td>
+            </tr>
+            <tr style="cursor:pointer" onclick="showToast('入社オリエンテーション資料.pdf を開きました（デモ）')">
+              <td style="padding:9px 12px"><span style="color:#c4314b;margin-right:6px">📕</span>入社オリエンテーション資料.pdf</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">2026-05-10</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">人事部</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">3.5MB</td>
+            </tr>
+            <tr style="cursor:pointer" onclick="showToast('テレワーク勤務規程.docx を開きました（デモ）')">
+              <td style="padding:9px 12px"><span style="color:#1072eb;margin-right:6px">📄</span>テレワーク勤務規程.docx</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">2026-06-01</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">人事部</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">89KB</td>
+            </tr>
+            <tr style="cursor:pointer" onclick="showToast('備品購入申請書.xlsx を開きました（デモ）')">
+              <td style="padding:9px 12px"><span style="color:#107c10;margin-right:6px">📊</span>備品購入申請書.xlsx</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">2026-03-25</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">総務部</td>
+              <td style="padding:9px 12px;color:#616161;font-size:12px">22KB</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <div class="quick-chips">
+        <span style="font-size:12px;color:#999;align-self:center">よく聞かれること：</span>
+        <button class="qchip" onclick="sendQuick('有給休暇の申請方法を教えて')">有給休暇の申請</button>
+        <button class="qchip" onclick="sendQuick('VPNの設定方法は？')">VPN設定</button>
+        <button class="qchip" onclick="sendQuick('経費精算のやり方を教えてください')">経費精算</button>
+        <button class="qchip" onclick="sendQuick('会議室の予約方法を教えて')">会議室予約</button>
+        <button class="qchip" onclick="sendQuick('テレワークの申請はどうすれば？')">テレワーク</button>
+        <button class="qchip" onclick="sendQuick('給与明細はどこで確認できますか')">給与明細</button>
+        <button class="qchip" onclick="sendQuick('出張の申請手順を教えてください')">出張申請</button>
+        <button class="qchip" onclick="sendQuick('フレックスタイムのルールを教えて')">フレックス</button>
+        <button class="qchip" onclick="sendQuick('新しいシステムの操作方法を教えて')">⚠️ ナレッジなしの例</button>
+      </div>
+      <div class="input-box">
+        <div class="input-text-row">
+          <textarea id="chat-input" rows="1"
+            placeholder="# 社内BOTチャンネルでメッセージを入力。@ でメンション、/ でコマンド"
+            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        </div>
+        <div class="input-toolbar">
+          <button class="itool itool-b" title="太字">B</button>
+          <button class="itool itool-i" title="斜体">I</button>
+          <button class="itool itool-u" title="下線">U</button>
+          <div class="itool-sep"></div>
+          <button class="itool" title="添付">📎</button>
+          <button class="itool" title="絵文字">😊</button>
+          <button class="itool" title="GIF" style="font-size:11px;font-weight:700">GIF</button>
+          <button class="itool" title="ステッカー">🎨</button>
+          <button class="itool" title="会議">📹</button>
+          <div class="itool-sep"></div>
+          <button class="itool itool-code" title="コード">&lt;/&gt;</button>
+          <button class="itool" title="その他">⋯</button>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()" title="送信">&#10148;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /body-row -->
+
+<!-- SharePoint KB — floating side panel -->
+<div id="sp-panel" style="
+  position:fixed; right:0; top:40px; bottom:0;
+  width:260px; background:white;
+  border-left:1px solid #e0e0e0;
+  display:flex; flex-direction:column;
+  box-shadow:-4px 0 12px rgba(0,0,0,0.06);
+  z-index:50;
+">
+  <div style="background:#0078d4;color:white;padding:10px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <span style="font-size:16px">📋</span>
+    <span style="font-size:13px;font-weight:700;flex:1">SharePoint ナレッジ</span>
+    <span id="kb-count" style="background:rgba(255,255,255,0.25);border-radius:8px;padding:1px 7px;font-size:11px">6件</span>
+  </div>
+  <div style="padding:6px 8px;border-bottom:1px solid #e8e8e8">
+    <input type="text" oninput="filterKB(this.value)" placeholder="🔍 ナレッジを検索…"
+      style="width:100%;border:1px solid #d1d1d1;border-radius:3px;padding:5px 8px;font-size:12px;outline:none;font-family:inherit">
+  </div>
+  <div class="kb-list" id="kb-list" style="flex:1;overflow-y:auto;padding:6px"></div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3>📝 フィードバックを送る</h3>
+      <button class="modal-xbtn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-bd">
+      <div><label class="mlabel">対象の質問</label><div class="mquestion" id="modal-question"></div></div>
+      <div><label class="mlabel">フィードバックの種類</label>
+        <select id="modal-reason">
+          <option value="missing">ナレッジが存在しない</option>
+          <option value="outdated">情報が古い・誤っている</option>
+          <option value="incomplete">回答が不完全</option>
+        </select>
+      </div>
+      <div><label class="mlabel">カテゴリ（担当部署の参考に）</label>
+        <select id="modal-category">
+          <option value="hr">人事・労務</option>
+          <option value="it">IT・システム</option>
+          <option value="ops">業務・オペレーション</option>
+          <option value="general">一般・その他</option>
+        </select>
+      </div>
+      <div style="background:#fff8f0;border-radius:4px;padding:10px 12px;font-size:12px;color:#8a6914;border-left:3px solid #ffb830;line-height:1.6">
+        💡 送信すると担当者に通知が届き、「未回答リスト」に自動記録されます。<br>担当者がナレッジを確認・登録後、BOTが改善された回答をするようになります。
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-sec" onclick="closeModal()">キャンセル</button>
+      <button class="btn-pri" onclick="submitFeedback()">📨 フィードバックを送る</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ <span id="toast-msg"></span></div>
+
+<script>
+document.querySelector('.channel-area').style.marginRight = '260px';
+
+const KB = [
+  { id:1,  title:'有給休暇の申請方法',     category:'hr',      content:'グループウェアの「申請フォーム」→「休暇申請」から申請。3営業日前までに上長承認。半日休暇も可。',                                                  updated:'2026-05-15', tag:'tag-hr',      tagLabel:'人事' },
+  { id:2,  title:'VPN接続設定ガイド',       category:'it',      content:'Cisco AnyConnect をインストール後、vpn.example.co.jp を入力。社員番号とADパスワードでログイン。',                                                    updated:'2025-11-02', tag:'tag-it',      tagLabel:'IT', old:true },
+  { id:3,  title:'経費精算の手順',           category:'ops',     content:'SAP Concur でログイン→新規レポート作成→領収書撮影→上長へ回付。月末締め。',                                                                       updated:'2026-04-01', tag:'tag-ops',     tagLabel:'業務' },
+  { id:4,  title:'社内Wikiへのアクセス',    category:'it',      content:'社内ネットワーク: http://wiki.internal、外部からはVPN接続後にアクセス。',                                                                          updated:'2026-03-10', tag:'tag-it',      tagLabel:'IT' },
+  { id:5,  title:'名刺発注手順',             category:'general', content:'総務部（内線2100）に発注書を提出。テンプレートは総務共有フォルダ。所要1週間。',                                                                   updated:'2026-01-20', tag:'tag-general', tagLabel:'一般' },
+  { id:6,  title:'健康診断の予約方法',       category:'hr',      content:'毎年4〜6月に健保から案内。指定の予約サイトで最寄りのクリニックを選択・予約。',                                                                   updated:'2026-05-01', tag:'tag-hr',      tagLabel:'人事' },
+  { id:7,  title:'会議室の予約方法',         category:'ops',     content:'社内グループウェアの「施設予約」→空き確認→予約。前日17時までに予約必須。キャンセルは1時間前まで可能。',                                      updated:'2026-05-20', tag:'tag-ops',     tagLabel:'業務' },
+  { id:8,  title:'テレワーク申請方法',       category:'hr',      content:'毎週月曜日の前週中に「テレワーク申請フォーム」より申請。週2日まで可能。承認後、当日はSlackのステータスを「在宅」に変更。',              updated:'2026-06-01', tag:'tag-hr',      tagLabel:'人事' },
+  { id:9,  title:'出張申請の手順',           category:'ops',     content:'1週間前までに「出張申請書」を上長へ提出。交通費・宿泊費は立替後SAP Concurで精算。新幹線グリーン車は不可。',                              updated:'2026-04-15', tag:'tag-ops',     tagLabel:'業務' },
+  { id:10, title:'備品購入の申請',           category:'ops',     content:'3万円未満：部門長承認の上、総務へ発注依頼書。3万円以上：稟議書が必要。PCなどIT機器はIT部門経由。',                                      updated:'2026-03-25', tag:'tag-ops',     tagLabel:'業務' },
+  { id:11, title:'入社手続きチェックリスト', category:'hr',      content:'①社員証受取 ②PCセットアップ（IT部） ③各種アカウント作成 ④就業規則確認・署名 ⑤銀行口座登録（人事へ） ⑥健康保険証受取',             updated:'2026-05-10', tag:'tag-hr',      tagLabel:'人事' },
+  { id:12, title:'給与明細の確認方法',       category:'hr',      content:'毎月25日にシステムに登録。マイページ(mypage.internal)→「給与・賞与」から確認可能。紙配布は廃止済み。',                                  updated:'2026-04-01', tag:'tag-hr',      tagLabel:'人事' },
+  { id:13, title:'フレックスタイム制について',category:'hr',     content:'コアタイム10:00〜15:00。フレキシブルタイム7:00〜22:00。月の標準労働時間を満たすこと。残業は事前申請制。',                                updated:'2026-05-01', tag:'tag-hr',      tagLabel:'人事' },
+  { id:14, title:'社員証紛失時の対応',       category:'hr',      content:'紛失に気づいたらすぐ総務部（内線2100）に連絡。警察への届出後、再発行申請書を提出。再発行費用は本人負担（1,000円）。',                  updated:'2026-02-15', tag:'tag-hr',      tagLabel:'人事' },
+  { id:15, title:'セキュリティインシデント報告',category:'it',   content:'不審メール・情報漏洩・PC紛失等は即座にIT部門（内線3000）に報告。自己判断で操作しない。報告書は24時間以内に提出。',                  updated:'2026-06-01', tag:'tag-it',      tagLabel:'IT' },
+  { id:16, title:'社内ポータルURL一覧',      category:'it',      content:'■社内ポータル: portal.internal ■IT申請: itsupport.internal ■人事マイページ: mypage.internal ■会議室予約: room.internal',              updated:'2026-06-10', tag:'tag-it',      tagLabel:'IT' },
+];
+
+const ANSWERS = {
+  '有給休暇':   { text:'グループウェアの「申請フォーム」→「休暇申請」から申請できます。\n\n📌 **ポイント**\n- 3営業日前までに申請\n- 上長の承認が必要\n- 半日休暇も取得可能です', source:'found', kbId:1 },
+  'VPN':        { text:'Cisco AnyConnect を使って接続します。\n\n**手順**\n1. Cisco AnyConnect をインストール\n2. サーバー: `vpn.example.co.jp`\n3. 社員番号 + ADパスワードでログイン\n\n⚠️ この情報は2025年11月のものです。設定が変わっている可能性があります。', source:'old', kbId:2 },
+  '経費':       { text:'SAP Concur で経費精算できます。\n\n**手順**\n1. Concur にログイン\n2. 「新規レポート作成」\n3. 領収書を撮影してアップロード\n4. 上長へ回付\n\n📅 月末締めです。', source:'found', kbId:3 },
+  'Wiki':       { text:'社内Wikiには以下でアクセスできます。\n\n- 社内ネットワーク: http://wiki.internal\n- 外部から: VPN接続後にアクセス可能\n\nわからないことがあれば IT部（内線 3000）まで。', source:'found', kbId:4 },
+  '会議室':     { text:'会議室の予約はグループウェアからできます。\n\n**手順**\n1. 「施設予約」→空き状況を確認\n2. 部屋・日時を選択して予約\n\n⏰ 前日17時までに予約が必要です。キャンセルは1時間前まで可能。', source:'found', kbId:7 },
+  'テレワーク': { text:'テレワークの申請方法をご説明します。\n\n📋 **申請手順**\n1. 前週中に「テレワーク申請フォーム」より申請\n2. 週2日まで利用可能\n3. 承認後、当日はSlackのステータスを「在宅」に変更\n\nコアタイムは10:00〜15:00です。', source:'found', kbId:8 },
+  '出張':       { text:'出張申請の手順です。\n\n**手順**\n1. 1週間前までに「出張申請書」を上長へ提出\n2. 承認後に交通・宿泊を手配\n3. 帰社後、SAP Concurで経費精算\n\n⚠️ 新幹線グリーン車は利用不可です。', source:'found', kbId:9 },
+  '給与':       { text:'給与明細の確認方法です。\n\n毎月25日に社内マイページに登録されます。\n\n📍 アクセス先: **mypage.internal**\n→「給与・賞与」メニューから確認\n\n紙での配布は廃止されています。', source:'found', kbId:12 },
+  'フレックス': { text:'フレックスタイム制のルールです。\n\n⏰ **コアタイム**: 10:00〜15:00（必須）\n🌅 **フレキシブル**: 7:00〜22:00の間で自由に調整\n\n月の標準労働時間を満たすことが必須です。残業は事前申請制です。', source:'found', kbId:13 },
+  'セキュリティ':{ text:'セキュリティインシデント発生時の対応です。\n\n🚨 **即座に対応が必要な場合**\n- 不審なメールを開いた\n- PCや社員証を紛失した\n- 情報漏洩が疑われる\n\n→ **IT部門（内線3000）に即座に連絡**してください。絶対に自己判断で操作しないこと。', source:'found', kbId:15 },
+  '備品':       { text:'備品購入の申請方法です。\n\n💰 **金額別の手続き**\n- **3万円未満**: 部門長承認の上、総務へ発注依頼書を提出\n- **3万円以上**: 稟議書が必要\n\n⚠️ PCなどIT機器はIT部門を経由して申請してください。', source:'found', kbId:10 },
+  'システム':   { text:'ご質問のシステムについてのナレッジが見つかりませんでした。\n\nSharePointに該当する情報が登録されていない可能性があります。担当部署に直接お問い合わせいただくか、「フィードバックを送る」からナレッジ追加をリクエストしてください。', source:'missing', kbId:null },
+};
+
+let UNANSWERED_LIST = [];
+let unansCounter = 0;
+let pendingFeedback = { question:'', kbId:null };
+let msgMinutes = 0;
+
+function renderKB(items) {
+  document.getElementById('kb-list').innerHTML = items.map(k=>`
+    <div id="kb-${k.id}" onclick="toggleKBDetail(${k.id})"
+      style="border:1px solid #e8e8e8;border-radius:4px;padding:7px 9px;margin-bottom:4px;cursor:pointer;transition:all .15s;${k._new?'border-color:#107c10;background:#f1faf1;':''}${k._updated?'border-color:#ff8c00;background:#fff9f0;':''}">
+      <div style="display:flex;align-items:center;gap:4px">
+        <div style="font-size:12px;font-weight:600;color:#242424;flex:1">${k._new?'🆕 ':''}${k.title}</div>
+        <span style="font-size:10px;color:#bbb">▾</span>
+      </div>
+      <div style="font-size:10px;color:#616161;display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px">
+        <span class="kb-tag ${k.tag}" style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700">${k.tagLabel}</span>
+        <span>更新: ${k.updated}</span>
+        ${k.old?'<span style="color:#c7910a">⚠️ 要確認</span>':''}
+      </div>
+      <div id="kbd-${k.id}" class="kb-detail-body">${k.content}</div>
+    </div>
+  `).join('');
+  document.getElementById('kb-count').textContent = KB.length+'件';
+}
+
+function toggleKBDetail(id) {
+  const el = document.getElementById('kbd-'+id);
+  if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+const style = document.createElement('style');
+style.textContent = '.tag-hr{background:#dce6f7;color:#0078d4}.tag-it{background:#f0e6ff;color:#7719aa}.tag-general{background:#e8f5e9;color:#107c10}.tag-ops{background:#fff3cd;color:#c7910a}';
+document.head.appendChild(style);
+
+function filterKB(q) { renderKB(q?KB.filter(k=>k.title.includes(q)||k.content.includes(q)):KB); }
+renderKB(KB);
+
+const messagesEl = document.getElementById('messages');
+
+function nowStr() {
+  const h = 9 + Math.floor(msgMinutes/60);
+  const m = msgMinutes % 60;
+  msgMinutes += Math.floor(2 + Math.random()*3);
+  return h.toString().padStart(2,'0')+':'+m.toString().padStart(2,'0');
+}
+
+function formatText(t) {
+  return t
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`(.+?)`/g,'<code>$1</code>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[\s\S]*?<\/li>)/g,s=>`<ul style="padding-left:18px;margin:4px 0">${s}</ul>`)
+    .replace(/\n/g,'<br>');
+}
+
+function addMessage(role, rawText, extras={}) {
+  const isBot = role==='bot';
+  const time = nowStr();
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+  const avtClass = isBot ? 'avt-bot' : 'avt-user';
+  const avtLetter = isBot ? '🤖' : 'RT';
+  const name = isBot ? '社内BOT' : '津島 亮介';
+  const nameClass = isBot ? 'msg-name is-bot' : 'msg-name';
+  const botTag = isBot ? '<span class="msg-bot-tag">BOT</span>' : '';
+  const onlineDot = !isBot ? 'online' : '';
+  let srcHtml = '';
+  if (extras.source==='found')   srcHtml = `<div class="src-badge src-found">📚 SharePointナレッジより回答</div>`;
+  if (extras.source==='old')     srcHtml = `<div class="src-badge src-old">⚠️ 古い情報の可能性あり</div>`;
+  if (extras.source==='missing') srcHtml = `<div class="src-badge src-missing">❌ ナレッジなし</div>`;
+  const qEsc = (extras.question||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  let actionRow = `<div class="msg-actions-row"><button class="reply-btn">← 返信</button>`;
+  if (extras.showFeedback) {
+    const cls = extras.source==='missing' ? 'feedback-btn-inline feedback-btn-missing' : 'feedback-btn-inline';
+    actionRow += `<button class="${cls}" onclick="openModal('${qEsc}',${extras.kbId})">📝 フィードバックを送る</button>`;
+  }
+  actionRow += `</div>`;
+  const content = isBot ? formatText(rawText) : rawText.replace(/</g,'&lt;');
+  row.innerHTML = `
+    <div class="msg-avt-col"><div class="msg-avt ${avtClass} ${onlineDot}">${avtLetter}</div></div>
+    <div class="msg-body">
+      <div class="msg-header"><span class="${nameClass}">${name}</span>${botTag}<span class="msg-time">${time}</span></div>
+      <div class="msg-text">${content}</div>
+      ${srcHtml}${actionRow}
+    </div>
+    <div class="msg-right-avt ${avtClass}" style="font-size:11px">${isBot?'🤖':'RT'}</div>
+    <div class="hover-actions">
+      <button class="hov-btn" title="いいね">👍</button>
+      <button class="hov-btn" title="ハート">❤️</button>
+      <button class="hov-btn" title="返信">↩</button>
+      <button class="hov-btn" title="転送">→</button>
+      <button class="hov-btn" title="その他">⋯</button>
+    </div>`;
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function showTyping() {
+  const el = document.createElement('div');
+  el.className = 'typing-row'; el.id = 'typing-row';
+  el.innerHTML = `<div class="typing-avt">🤖</div><div class="typing-dots"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div><span class="typing-label">社内BOT が入力中…</span>`;
+  messagesEl.appendChild(el);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+function removeTyping() { const t=document.getElementById('typing-row'); if(t) t.remove(); }
+
+function getAnswer(q) {
+  for (const [k,a] of Object.entries(ANSWERS)) { if(q.includes(k)) return a; }
+  return { text:'ご質問の内容に該当するナレッジが見つかりませんでした。より具体的な言葉で聞いていただくか、担当部署にお問い合わせください。', source:'missing', kbId:null };
+}
+
+// ─── 未回答リスト ─────────────────────────────────
+function addToUnanswered(question) {
+  unansCounter++;
+  const h = (9+Math.floor(Math.max(0,msgMinutes-2)/60)).toString().padStart(2,'0');
+  const m = (Math.max(0,msgMinutes-2)%60).toString().padStart(2,'0');
+  UNANSWERED_LIST.push({ no:unansCounter, question, datetime:'2026-06-11 '+h+':'+m, category:'未分類', categoryTag:'tag-general', status:'open', assignee:'未割当' });
+  renderUnanswered();
+  updateUnansweredBadge();
+}
+
+function renderUnanswered() {
+  const tbody = document.getElementById('unanswered-tbody');
+  const empty = document.getElementById('unanswered-empty');
+  if (!tbody) return;
+  if (!UNANSWERED_LIST.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+  const statusHtml = {
+    open: '<span class="status-badge status-open">● 未対応</span>',
+    wip:  '<span class="status-badge status-wip">◐ 対応中</span>',
+    done: '<span class="status-badge status-done">✓ 完了</span>'
+  };
+  tbody.innerHTML = UNANSWERED_LIST.map(r=>`
+    <tr>
+      <td style="color:#999;text-align:center;font-size:12px">${r.no}</td>
+      <td style="font-size:13px;max-width:260px">${r.question}</td>
+      <td style="color:#616161;font-size:11px;white-space:nowrap">${r.datetime}</td>
+      <td><span class="kb-tag ${r.categoryTag}" style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700">${r.category}</span></td>
+      <td>${statusHtml[r.status]||statusHtml.open}</td>
+      <td style="font-size:12px;color:#616161">${r.assignee}</td>
+    </tr>`).join('');
+}
+
+function updateUnansweredBadge() {
+  const badge = document.getElementById('unans-badge');
+  if (!badge) return;
+  const openCount = UNANSWERED_LIST.filter(r=>r.status==='open').length;
+  badge.textContent = openCount;
+  badge.style.display = openCount > 0 ? 'inline-flex' : 'none';
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-item[data-tab]').forEach(t=>t.classList.remove('active'));
+  const activeTab = document.querySelector(`.tab-item[data-tab="${tabName}"]`);
+  if (activeTab) activeTab.classList.add('active');
+  const msgArea = document.getElementById('messages');
+  const inputArea = document.querySelector('.input-area');
+  const unansArea = document.getElementById('unanswered-area');
+  const filesArea = document.getElementById('files-area');
+  msgArea.style.display = 'none';
+  inputArea.style.display = 'none';
+  if(unansArea) unansArea.classList.remove('visible');
+  if(filesArea) filesArea.classList.remove('visible');
+  if (tabName === 'unanswered') {
+    if(unansArea) unansArea.classList.add('visible');
+    renderUnanswered();
+  } else if (tabName === 'files') {
+    if(filesArea) filesArea.classList.add('visible');
+  } else {
+    msgArea.style.display = '';
+    inputArea.style.display = '';
+  }
+}
+
+function exportCSV() {
+  if(!UNANSWERED_LIST.length){ showToast('未回答リストはまだ空です'); return; }
+  const header = 'No.,質問内容,受信日時,カテゴリ,ステータス,対応者';
+  const rows = UNANSWERED_LIST.map(r=>[r.no,`"${r.question}"`,r.datetime,r.category,r.status==='open'?'未対応':r.status==='wip'?'対応中':'完了',r.assignee].join(','));
+  const blob = new Blob(['﻿'+[header,...rows].join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='未回答質問リスト.csv'; a.click();
+  showToast('CSVをダウンロードしました');
+}
+// ────────────────────────────────────────────────
+
+setTimeout(()=>{ addMessage('bot','こんにちは！社内BOT です 👋\nSharePoint のナレッジをもとに社内の質問にお答えします。何でもお気軽にどうぞ。'); }, 300);
+
+async function sendMessage() {
+  const inp = document.getElementById('chat-input');
+  const q = inp.value.trim(); if(!q) return;
+  document.getElementById('send-btn').disabled=true;
+  inp.value=''; inp.style.height='auto';
+  addMessage('user', q);
+  showTyping();
+  await delay(900+Math.random()*600);
+  removeTyping();
+  const ans = getAnswer(q);
+  addMessage('bot', ans.text, { source:ans.source, showFeedback:ans.source!=='found', question:q, kbId:ans.kbId });
+  if(ans.source==='missing') addToUnanswered(q);
+  document.getElementById('send-btn').disabled=false;
+}
+function sendQuick(q) { document.getElementById('chat-input').value=q; sendMessage(); }
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+function delay(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+function openModal(question, kbId) {
+  pendingFeedback={question,kbId};
+  document.getElementById('modal-question').textContent=question;
+  const r=document.getElementById('modal-reason');
+  if(kbId){const kb=KB.find(k=>k.id===kbId);r.value=kb?.old?'outdated':'incomplete';}else{r.value='missing';}
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+async function submitFeedback(){
+  const reason=document.getElementById('modal-reason').value;
+  const category=document.getElementById('modal-category').value;
+  const catMap={hr:{tag:'tag-hr',label:'人事'},it:{tag:'tag-it',label:'IT'},ops:{tag:'tag-ops',label:'業務'},general:{tag:'tag-general',label:'一般'}};
+  closeModal();
+  const today=new Date().toISOString().slice(0,10);
+  const ci=catMap[category]||catMap.general;
+
+  // 未回答リストのステータスを「対応中」に更新
+  const uItem = UNANSWERED_LIST.find(r=>r.question===pendingFeedback.question&&r.status==='open');
+  if(uItem){ uItem.status='wip'; uItem.assignee='津島 亮介'; uItem.categoryTag=ci.tag; uItem.category=ci.label; renderUnanswered(); updateUnansweredBadge(); }
+
+  if(pendingFeedback.kbId&&reason!=='missing'){
+    const kb=KB.find(k=>k.id===pendingFeedback.kbId);
+    if(kb){kb.updated=today;kb.old=false;kb._updated=true;renderKB(KB);
+      setTimeout(()=>{const el=document.getElementById(`kb-${kb.id}`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},100);
+      setTimeout(()=>{kb._updated=false;renderKB(KB);},2500);
+      showToast(`「${kb.title}」の確認依頼を担当者に送りました`);}
+  } else {
+    const title=pendingFeedback.question.slice(0,20)+(pendingFeedback.question.length>20?'…':'');
+    const ni={id:KB.length+1,title,category,content:'（担当者確認中）',updated:today,tag:ci.tag,tagLabel:ci.label,_new:true};
+    KB.unshift(ni);renderKB(KB);
+    setTimeout(()=>{const el=document.getElementById(`kb-${ni.id}`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},100);
+    setTimeout(()=>{ni._new=false;renderKB(KB);},3000);
+    showToast('フィードバックを受け付けました（担当者に通知済み）');
+  }
+  await delay(800);
+  addMessage('bot','📝 フィードバックありがとうございます！\n担当者に確認を依頼しました。ナレッジが更新されたら改善された情報でお答えします。',{source:'found'});
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>
