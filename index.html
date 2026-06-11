@@ -562,6 +562,126 @@ table.sp-table tr:last-child td { border-bottom:none; }
 
 /* KB detail expand */
 .kb-detail-body { display:none; margin-top:6px; padding-top:6px; border-top:1px solid #eee; font-size:11px; color:#424242; line-height:1.6; white-space:pre-wrap; }
+
+/* ════════ VIEW TOGGLE BUTTON ════════ */
+.view-toggle-btn {
+  display:flex; align-items:center; gap:5px;
+  background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22);
+  border-radius:14px; padding:4px 11px;
+  color:white; font-size:12px; cursor:pointer;
+  font-family:inherit; transition:background 0.15s; white-space:nowrap;
+}
+.view-toggle-btn:hover { background:rgba(255,255,255,0.22); }
+
+/* ════════ PHONE FRAME OVERLAY ════════ */
+#phone-wrapper {
+  display:none; position:fixed; inset:0;
+  background:radial-gradient(ellipse at 40% 50%, #1e2547 0%, #080c18 100%);
+  align-items:center; justify-content:center; z-index:500;
+}
+#phone-wrapper.active { display:flex; }
+
+.phone-frame {
+  width:375px; height:780px;
+  background:#fff; border-radius:46px;
+  border:11px solid #1c1c1e;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.06), 0 40px 90px rgba(0,0,0,0.75), inset 0 0 0 1px rgba(0,0,0,0.25);
+  overflow:hidden; display:flex; flex-direction:column; position:relative;
+}
+.phone-notch-bar {
+  height:38px; background:#fff;
+  display:flex; align-items:center; padding:0 22px;
+  flex-shrink:0; position:relative;
+}
+.phone-notch {
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:126px; height:36px; background:#1c1c1e;
+  border-radius:0 0 22px 22px;
+}
+.phone-status-l { font-size:13px; font-weight:800; color:#000; z-index:1; }
+.phone-status-r { margin-left:auto; display:flex; gap:5px; align-items:center; z-index:1; font-size:11px; font-weight:600; color:#000; }
+
+.phone-teams-hd {
+  background:linear-gradient(135deg, #6264a7, #464775);
+  padding:9px 14px; display:flex; align-items:center; gap:10px; flex-shrink:0;
+}
+.phone-hd-back { background:none; border:none; color:white; font-size:26px; cursor:pointer; padding:0; line-height:1; }
+.phone-hd-info { flex:1; }
+.phone-hd-info h2 { font-size:15px; font-weight:700; color:white; margin:0; }
+.phone-hd-info p  { font-size:11px; color:rgba(255,255,255,0.75); margin:0; }
+.phone-hd-btn { background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:3px; }
+
+.phone-msgs {
+  flex:1; overflow-y:auto; background:#f0f2f8; padding:12px 10px 8px;
+}
+.phone-msg-row { display:flex; gap:8px; margin-bottom:10px; align-items:flex-end; }
+.phone-msg-row.u { flex-direction:row-reverse; }
+.phone-msg-avt {
+  width:30px; height:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; color:white; flex-shrink:0;
+}
+.phone-msg-body { max-width:74%; }
+.phone-msg-name { font-size:10px; color:#888; margin-bottom:3px; }
+.phone-msg-row.u .phone-msg-name { text-align:right; }
+.phone-bubble {
+  padding:9px 12px; font-size:13px; line-height:1.55;
+  word-break:break-word; border-radius:4px 16px 16px 16px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.08);
+}
+.phone-bubble.b { background:white; color:#242424; }
+.phone-bubble.u { background:#6264a7; color:white; border-radius:16px 4px 16px 16px; }
+.phone-badge {
+  display:inline-block; font-size:10px; padding:2px 7px;
+  border-radius:10px; margin-top:5px;
+}
+.phone-badge.found   { background:#e5f4e0; color:#107c10; }
+.phone-badge.old     { background:#fff4ce; color:#8a6914; }
+.phone-badge.missing { background:#fde7e9; color:#c4314b; }
+.phone-fb-btn {
+  display:inline-flex; align-items:center; gap:3px;
+  margin-top:6px; font-size:11px; background:none;
+  border:1px solid rgba(0,0,0,0.15); border-radius:10px;
+  padding:3px 8px; cursor:pointer; color:#c7910a; font-family:inherit;
+}
+.phone-bubble.u .phone-fb-btn { color:#ffe082; border-color:rgba(255,255,255,0.3); }
+
+.phone-input-area {
+  background:white; border-top:1px solid #e0e0e0;
+  padding:8px 12px; display:flex; align-items:center; gap:8px; flex-shrink:0;
+}
+.phone-input-box {
+  flex:1; background:#f2f2f7; border:none; border-radius:22px;
+  padding:9px 14px; font-size:13px; font-family:inherit; outline:none;
+  color:#242424; resize:none; max-height:80px;
+}
+.phone-input-box::placeholder { color:#aaa; }
+.phone-send-btn {
+  width:36px; height:36px; background:#6264a7; border:none; border-radius:50%;
+  color:white; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.phone-send-btn:hover { background:#464775; }
+
+.phone-bottom-nav {
+  background:white; border-top:1px solid #e8e8e8;
+  display:flex; height:58px; flex-shrink:0;
+}
+.phone-nav-item {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:2px; cursor:pointer; font-size:9px; color:#999;
+}
+.phone-nav-item.on { color:#6264a7; }
+.phone-nav-icon { font-size:19px; line-height:1; }
+
+.phone-switcher {
+  position:absolute; bottom:-52px; left:50%; transform:translateX(-50%);
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);
+  color:white; padding:9px 22px; border-radius:22px; cursor:pointer;
+  font-size:13px; font-family:inherit; white-space:nowrap;
+  backdrop-filter:blur(8px); transition:background 0.15s;
+}
+.phone-switcher:hover { background:rgba(255,255,255,0.2); }
 </style>
 </head>
 <body>
@@ -577,6 +697,7 @@ table.sp-table tr:last-child td { border-bottom:none; }
     <input type="text" placeholder="人、キーワードの検索、またはコマンドの入力">
   </div>
   <div class="topbar-right">
+    <button class="view-toggle-btn" onclick="toggleView()">📱 スマホ表示</button>
     <div class="topbar-avatar">RT</div>
     <button class="topbar-rightbtn">?</button>
   </div>
@@ -898,6 +1019,59 @@ table.sp-table tr:last-child td { border-bottom:none; }
 
 <div class="toast" id="toast">✅ <span id="toast-msg"></span></div>
 
+<!-- ════ PHONE FRAME OVERLAY ════ -->
+<div id="phone-wrapper">
+  <div style="position:relative">
+    <div class="phone-frame">
+
+      <!-- Status bar -->
+      <div class="phone-notch-bar">
+        <div class="phone-notch"></div>
+        <span class="phone-status-l">9:41</span>
+        <div class="phone-status-r">
+          <span>●●●</span>
+          <span>Wi-Fi</span>
+          <span>🔋</span>
+        </div>
+      </div>
+
+      <!-- Teams Header -->
+      <div class="phone-teams-hd">
+        <button class="phone-hd-back" onclick="toggleView()">‹</button>
+        <div class="phone-hd-info">
+          <h2>社内BOTチャンネル</h2>
+          <p>社内BOTチーム · 3名</p>
+        </div>
+        <button class="phone-hd-btn">📹</button>
+        <button class="phone-hd-btn">⋯</button>
+      </div>
+
+      <!-- Messages -->
+      <div class="phone-msgs" id="phone-msgs"></div>
+
+      <!-- Input -->
+      <div class="phone-input-area">
+        <textarea class="phone-input-box" id="phone-input" rows="1"
+          placeholder="メッセージを入力..."
+          onkeydown="handlePhoneKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="phone-send-btn" onclick="sendPhoneMessage()">▶</button>
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="phone-bottom-nav">
+        <div class="phone-nav-item"><span class="phone-nav-icon">💬</span>チャット</div>
+        <div class="phone-nav-item on"><span class="phone-nav-icon">👥</span>チーム</div>
+        <div class="phone-nav-item"><span class="phone-nav-icon">📞</span>通話</div>
+        <div class="phone-nav-item"><span class="phone-nav-icon">📁</span>ファイル</div>
+        <div class="phone-nav-item"><span class="phone-nav-icon">⋯</span>その他</div>
+      </div>
+    </div>
+
+    <button class="phone-switcher" onclick="toggleView()">💻 PCビューに切替</button>
+  </div>
+</div>
+
 <script>
 document.querySelector('.channel-area').style.marginRight = '260px';
 
@@ -939,6 +1113,7 @@ let UNANSWERED_LIST = [];
 let unansCounter = 0;
 let pendingFeedback = { question:'', kbId:null };
 let msgMinutes = 0;
+const MSG_LOG = [];
 
 function renderKB(items) {
   document.getElementById('kb-list').innerHTML = items.map(k=>`
@@ -992,6 +1167,7 @@ function formatText(t) {
 }
 
 function addMessage(role, rawText, extras={}) {
+  MSG_LOG.push({role, text:rawText, extras});
   const isBot = role==='bot';
   const time = nowStr();
   const row = document.createElement('div');
@@ -1187,6 +1363,98 @@ function showToast(msg){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),3500);
 }
+
+// ─── PC / スマホ 切替 ────────────────────────────────
+function toggleView() {
+  const wrapper = document.getElementById('phone-wrapper');
+  const isActive = wrapper.classList.contains('active');
+  if (isActive) {
+    wrapper.classList.remove('active');
+    document.querySelector('.view-toggle-btn').textContent = '📱 スマホ表示';
+  } else {
+    wrapper.classList.add('active');
+    document.querySelector('.view-toggle-btn').textContent = '💻 PC表示';
+    renderAllPhoneMsgs();
+  }
+}
+
+function renderAllPhoneMsgs() {
+  const container = document.getElementById('phone-msgs');
+  container.innerHTML = '';
+  MSG_LOG.forEach(m => _addPhoneMsg(m.role, m.text, m.extras));
+  container.scrollTop = container.scrollHeight;
+}
+
+function _addPhoneMsg(role, rawText, extras={}) {
+  const container = document.getElementById('phone-msgs');
+  if (!container) return;
+  const isBot = role === 'bot';
+  const row = document.createElement('div');
+  row.className = 'phone-msg-row' + (isBot ? '' : ' u');
+
+  const avtStyle = isBot
+    ? 'background:linear-gradient(135deg,#6264a7,#464775)'
+    : 'background:linear-gradient(135deg,#0078d4,#005a9e)';
+  const name = isBot ? '社内BOT' : '津島 亮介';
+
+  let badge = '';
+  if (extras.source==='found')   badge = '<div class="phone-badge found">📚 ナレッジより回答</div>';
+  if (extras.source==='old')     badge = '<div class="phone-badge old">⚠️ 古い情報の可能性あり</div>';
+  if (extras.source==='missing') badge = '<div class="phone-badge missing">❌ ナレッジなし</div>';
+
+  const qEsc = (extras.question||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  let fbBtn = '';
+  if (extras.showFeedback) {
+    fbBtn = `<div><button class="phone-fb-btn" onclick="openModal('${qEsc}',${extras.kbId})">📝 フィードバック</button></div>`;
+  }
+
+  const content = isBot ? formatText(rawText) : rawText.replace(/</g,'&lt;');
+  const bubbleCls = isBot ? 'b' : 'u';
+
+  row.innerHTML = `
+    <div class="phone-msg-avt" style="${avtStyle}">${isBot?'🤖':'RT'}</div>
+    <div class="phone-msg-body">
+      <div class="phone-msg-name">${name}</div>
+      <div class="phone-bubble ${bubbleCls}">${content}${badge}${fbBtn}</div>
+    </div>`;
+  container.appendChild(row);
+}
+
+function showPhoneTyping() {
+  const container = document.getElementById('phone-msgs');
+  const row = document.createElement('div');
+  row.className = 'phone-msg-row'; row.id = 'phone-typing';
+  row.innerHTML = `
+    <div class="phone-msg-avt" style="background:linear-gradient(135deg,#6264a7,#464775)">🤖</div>
+    <div class="phone-msg-body">
+      <div class="phone-msg-name">社内BOT</div>
+      <div class="phone-bubble b"><div class="typing-dots"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>
+    </div>`;
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+function removePhoneTyping() { const t=document.getElementById('phone-typing'); if(t)t.remove(); }
+
+async function sendPhoneMessage() {
+  const inp = document.getElementById('phone-input');
+  const q = inp.value.trim(); if (!q) return;
+  inp.value = ''; inp.style.height = 'auto';
+
+  addMessage('user', q, {});
+  _addPhoneMsg('user', q, {});
+  showPhoneTyping();
+  await delay(900 + Math.random()*600);
+  removePhoneTyping();
+  const ans = getAnswer(q);
+  const extras = { source:ans.source, showFeedback:ans.source!=='found', question:q, kbId:ans.kbId };
+  addMessage('bot', ans.text, extras);
+  _addPhoneMsg('bot', ans.text, extras);
+  const container = document.getElementById('phone-msgs');
+  if (container) container.scrollTop = container.scrollHeight;
+  if (ans.source==='missing') addToUnanswered(q);
+}
+function handlePhoneKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendPhoneMessage();} }
+// ────────────────────────────────────────────────────
 </script>
 </body>
 </html>
